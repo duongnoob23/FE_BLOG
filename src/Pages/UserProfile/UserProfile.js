@@ -12,6 +12,101 @@ function UserProfile() {
   const [selectedPost, setSelectedPost] = useState(null);
   const [showPostDetail, setShowPostDetail] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // API để lấy bài viết của người dùng
+  const getUserPosts = async (userId) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setUserPosts([]);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `http://localhost:8081/api/photo/photosOfUser/${userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Không thể tải bài viết của người dùng");
+      }
+
+      const data = await response.json();
+
+      // Transform API data
+      const transformedPosts = data.map((photo) => ({
+        id: photo._id,
+        caption: `Bài viết được đăng lúc ${new Date(
+          photo.date_time
+        ).toLocaleDateString("vi-VN")}`,
+        image: `http://localhost:8081/uploads/${photo.file_name}`,
+        author: {
+          id: photo.user_id,
+          name: user ? user.name : "Người dùng",
+          avatar:
+            "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+        },
+        comments: photo.comments
+          ? photo.comments.map((comment, commentIndex) => ({
+              id: comment._id || commentIndex + 1,
+              content: comment.comment,
+              author: `${comment.user.first_name} ${comment.user.last_name}`,
+              date: comment.date_time,
+            }))
+          : [],
+      }));
+
+      setUserPosts(transformedPosts);
+    } catch (error) {
+      console.error("Error loading user posts:", error);
+      setError("Không thể tải bài viết của người dùng");
+      setUserPosts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // API để lấy thông tin người dùng từ danh sách
+  const getUserInfo = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const response = await fetch("http://localhost:8081/api/user/list", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const users = await response.json();
+        const foundUser = users.find((u) => u._id === userId);
+        if (foundUser) {
+          setUser({
+            id: foundUser._id,
+            name: `${foundUser.first_name} ${foundUser.last_name}`,
+            avatar:
+              "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error loading user info:", error);
+    }
+  };
 
   useEffect(() => {
     // Get current user from localStorage
@@ -20,65 +115,17 @@ function UserProfile() {
       setCurrentUser(JSON.parse(storedUser));
     }
 
-    // Fake user data
-    const fakeUsers = [
-      {
-        id: 1,
-        firstname: "John",
-        lastname: "Doe",
-        avatar:
-          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      },
-      {
-        id: 2,
-        firstname: "Trần",
-        lastname: "Thị B",
-        avatar:
-          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
-      },
-    ];
-
-    // Fake posts data
-    const fakePosts = [
-      {
-        id: 1,
-        caption: "Cảnh đẹp thiên nhiên tuyệt vời! 🌅",
-        image:
-          "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&h=400&fit=crop",
-        author: {
-          id: 1,
-          name: "John Doe",
-          avatar:
-            "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-        },
-        comments: [
-          { id: 1, content: "Đẹp quá!", author: "Mai Anh" },
-          { id: 2, content: "Chụp ở đâu vậy bạn?", author: "Tuấn Anh" },
-        ],
-      },
-      {
-        id: 2,
-        caption: "Buổi sáng tuyệt vời với tách cà phê ☕",
-        image:
-          "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=500&h=400&fit=crop",
-        author: {
-          id: 2,
-          name: "Trần Thị B",
-          avatar:
-            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
-        },
-        comments: [{ id: 3, content: "Nhìn ngon quá!", author: "Hương Giang" }],
-      },
-    ];
-
-    const foundUser = fakeUsers.find((u) => u.id === parseInt(userId));
-    setUser(foundUser);
-
-    const filteredPosts = fakePosts.filter(
-      (post) => post.author.id === parseInt(userId)
-    );
-    setUserPosts(filteredPosts);
+    // Load user info and posts
+    getUserInfo();
+    getUserPosts(userId);
   }, [userId]);
+
+  useEffect(() => {
+    // Load posts again when user info is loaded
+    if (user) {
+      getUserPosts(userId);
+    }
+  }, [user, userId]);
 
   const handleOpenPostDetail = (post) => {
     setSelectedPost(post);
@@ -92,11 +139,31 @@ function UserProfile() {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     setCurrentUser(null);
   };
 
-  if (!user) {
-    return <div>Loading...</div>;
+  const handleCommentAdded = (postId, newComment) => {
+    setUserPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? { ...post, comments: [...post.comments, newComment] }
+          : post
+      )
+    );
+  };
+
+  if (!user && !loading) {
+    return (
+      <div className="user-profile">
+        <Header user={currentUser} onLogout={handleLogout} />
+        <div className="user-profile__content">
+          <div className="user-profile__error">
+            <p>Không tìm thấy người dùng</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -104,42 +171,67 @@ function UserProfile() {
       <Header user={currentUser} onLogout={handleLogout} />
 
       <div className="user-profile__content">
-        <div className="user-profile__header">
-          <img
-            src={user.avatar}
-            alt={`${user.firstname} ${user.lastname}`}
-            className="user-profile__avatar"
-          />
-          <div className="user-profile__info">
-            <h1 className="user-profile__name">
-              {user.firstname} {user.lastname}
-            </h1>
-            <p className="user-profile__posts-count">
-              {userPosts.length} bài viết
-            </p>
+        {user && (
+          <div className="user-profile__header">
+            <img
+              src={user.avatar}
+              alt={user.name}
+              className="user-profile__avatar"
+            />
+            <div className="user-profile__info">
+              <h1 className="user-profile__name">{user.name}</h1>
+              <p className="user-profile__posts-count">
+                {userPosts.length} bài viết
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="user-profile__posts">
           <h2 className="user-profile__posts-title">Bài viết</h2>
-          <div className="user-profile__posts-list">
-            {userPosts.length > 0 ? (
-              userPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onOpenPostDetail={handleOpenPostDetail}
-                />
-              ))
-            ) : (
-              <p className="user-profile__no-posts">Chưa có bài viết nào</p>
-            )}
-          </div>
+
+          {loading && (
+            <div className="user-profile__loading">
+              <p>Đang tải bài viết...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="user-profile__error">
+              <p>{error}</p>
+              <button
+                onClick={() => getUserPosts(userId)}
+                className="user-profile__retry-btn"
+              >
+                Thử lại
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <div className="user-profile__posts-list">
+              {userPosts.length > 0 ? (
+                userPosts.map((post) => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    onOpenPostDetail={handleOpenPostDetail}
+                  />
+                ))
+              ) : (
+                <p className="user-profile__no-posts">Chưa có bài viết nào</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {showPostDetail && selectedPost && (
-        <PostDetail post={selectedPost} onClose={handleClosePostDetail} />
+        <PostDetail
+          post={selectedPost}
+          onClose={handleClosePostDetail}
+          onCommentAdded={handleCommentAdded}
+        />
       )}
     </div>
   );

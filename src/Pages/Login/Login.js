@@ -3,38 +3,65 @@ import { useNavigate, Link } from "react-router-dom";
 import "./Login.css";
 
 function Login({ onLogin }) {
-  const [email, setEmail] = useState("");
+  const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    // Kiểm tra tài khoản và mật khẩu cụ thể
-    if (email === "lamtiendung11082002@gmail.com" && password === "1") {
-      const userData = {
-        id: 1,
-        firstname: "Tiến",
-        lastname: "Dương",
-        email: email,
-        avatar:
-          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      };
+    try {
+      const response = await fetch("http://localhost:8081/api/user/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userName: userName,
+          password: password,
+        }),
+      });
 
-      // Lưu user vào localStorage
-      localStorage.setItem("user", JSON.stringify(userData));
+      const data = await response.json();
 
-      // Gọi callback để cập nhật state ở component cha
-      if (onLogin) {
-        onLogin(userData);
+      if (response.ok) {
+        // Đăng nhập thành công
+        // Lưu token vào localStorage
+        localStorage.setItem("token", data.token);
+
+        // Tạo user object từ response (có thể cần điều chỉnh theo API của bạn)
+        const userData = {
+          id: data._id, // Có thể lấy từ token hoặc API khác
+          firstname: data.first_name, // Tạm thời dùng userName
+          lastname: data.last_name,
+          userName: userName,
+          avatar:
+            "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+        };
+
+        // Lưu user vào localStorage
+        localStorage.setItem("user", JSON.stringify(userData));
+
+        // Gọi callback để cập nhật state ở component cha
+        if (onLogin) {
+          onLogin(userData);
+        }
+
+        // Chuyển về trang chủ
+        navigate("/");
+      } else {
+        // Đăng nhập thất bại
+        setError(data.message || "Đăng nhập thất bại!");
       }
-
-      // Chuyển về trang chủ
-      navigate("/");
-    } else {
-      setError("Email hoặc mật khẩu không đúng!");
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("Lỗi kết nối đến server!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,12 +78,13 @@ function Login({ onLogin }) {
 
           <div className="login__field">
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
+              type="text"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              placeholder="Tên đăng nhập"
               className="login__input"
               required
+              disabled={loading}
             />
           </div>
 
@@ -68,11 +96,12 @@ function Login({ onLogin }) {
               placeholder="Mật khẩu"
               className="login__input"
               required
+              disabled={loading}
             />
           </div>
 
-          <button type="submit" className="login__submit">
-            Đăng nhập
+          <button type="submit" className="login__submit" disabled={loading}>
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
         </form>
 
@@ -89,7 +118,7 @@ function Login({ onLogin }) {
           <p className="login__demo-text">
             <strong>Tài khoản demo:</strong>
             <br />
-            Email: lamtiendung11082002@gmail.com
+            Username: a1
             <br />
             Mật khẩu: 1
           </p>

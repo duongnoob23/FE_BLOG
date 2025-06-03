@@ -1,42 +1,151 @@
-import React from "react";
+import React, { useState } from "react";
 import "./PostDetail.css";
 import Modal from "../../Common/Modal/Modal";
-import CommentList from "../../Comment/CommentList/CommentList";
-import CommentForm from "../../Comment/CommentForm/CommentForm";
 
-function PostDetail({ post, onClose }) {
+function PostDetail({ post, onClose, onCommentAdded }) {
+  const [newComment, setNewComment] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [comments, setComments] = useState(post.comments || []);
+
+  // API để thêm comment
+  const addComment = async () => {
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    if (!token || !user.id) {
+      alert("Vui lòng đăng nhập để comment!");
+      return;
+    }
+
+    if (!newComment.trim()) {
+      alert("Vui lòng nhập nội dung comment!");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8081/api/photo/comments/${post.id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            user_id: user.id,
+            comment: newComment.trim(),
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Không thể thêm comment");
+      }
+
+      // Thêm comment mới vào danh sách local
+      const newCommentObj = {
+        id: Date.now(),
+        content: newComment.trim(),
+        author: user.firstname || user.userName,
+        date: new Date().toISOString(),
+      };
+
+      setComments([...comments, newCommentObj]);
+      setNewComment("");
+
+      // Callback để cập nhật post trong parent component
+      if (onCommentAdded) {
+        onCommentAdded(post.id, newCommentObj);
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      alert("Không thể thêm comment. Vui lòng thử lại!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    addComment();
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      addComment();
+    }
+  };
+
   return (
     <Modal onClose={onClose}>
       <div className="post-detail">
-        <div className="post-detail__header">
-          <h2 className="post-detail__title">
-            Bài viết của {post.author.name}
-          </h2>
-          <div className="post-detail__author">
-            <img
-              src={post.author.avatar}
-              alt={post.author.name}
-              className="post-detail__author-avatar"
-            />
-            <span className="post-detail__author-name">{post.author.name}</span>
-          </div>
-          <div className="post-detail__caption">
-            <p>{post.caption}</p>
-          </div>
-        </div>
-
         <div className="post-detail__content">
-          <div className="post-detail__image-container">
-            <img src={post.image} alt="Post" className="post-detail__image" />
+          <div className="post-detail__image">
+            <img src={post.image} alt={post.caption} />
           </div>
 
-          <div className="post-detail__comments">
-            <CommentList comments={post.comments} />
-          </div>
-        </div>
+          <div className="post-detail__sidebar">
+            <div className="post-detail__header">
+              <img
+                src={post.author.avatar}
+                alt={post.author.name}
+                className="post-detail__author-avatar"
+              />
+              <div className="post-detail__author-info">
+                <span className="post-detail__author-name">
+                  {post.author.name}
+                </span>
+              </div>
+            </div>
 
-        <div className="post-detail__comment-form">
-          <CommentForm postId={post.id} />
+            <div className="post-detail__caption">
+              <p>{post.caption}</p>
+            </div>
+
+            <div className="post-detail__comments">
+              <div className="post-detail__comments-list">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="post-detail__comment">
+                    <div className="post-detail__comment-header">
+                      <span className="post-detail__comment-author">
+                        {comment.author}
+                      </span>
+                      <span className="post-detail__comment-date">
+                        {new Date(comment.date).toLocaleDateString("vi-VN")}
+                      </span>
+                    </div>
+                    <p className="post-detail__comment-content">
+                      {comment.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="post-detail__comment-form">
+              <div className="post-detail__comment-input-wrapper">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Viết bình luận..."
+                  className="post-detail__comment-input"
+                  rows="2"
+                  disabled={loading}
+                />
+                <button
+                  type="submit"
+                  className="post-detail__comment-submit"
+                  disabled={loading || !newComment.trim()}
+                >
+                  {loading ? "Đang gửi..." : "Gửi"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </Modal>

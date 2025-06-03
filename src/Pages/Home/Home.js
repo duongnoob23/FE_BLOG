@@ -11,6 +11,65 @@ function Home({ user: propUser, onLogout }) {
   const [selectedPost, setSelectedPost] = useState(null);
   const [showPostDetail, setShowPostDetail] = useState(false);
   const [posts, setPosts] = useState([]);
+  console.log("🚀 ~ Home ~ posts:", posts);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // API để lấy danh sách bài viết
+  const getPhotos = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setPosts([]);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:8081/api/photo", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Không thể tải bài viết");
+      }
+
+      const data = await response.json();
+
+      // Transform API data thành format component cần
+      const transformedPosts = data.map((photo, index) => ({
+        id: photo._id,
+        caption: `Bài viết của ${photo.user.name}`,
+        image: `http://localhost:8081/uploads/${photo.file_name}`,
+        author: {
+          id: photo.user.user_id,
+          name: photo.user.name,
+          name2: photo.user.name2,
+          avatar:
+            "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+        },
+        comments: photo.comments.map((comment, commentIndex) => ({
+          id: commentIndex + 1,
+          content: comment.comment,
+          author: comment.user.name,
+          date: comment.date_time,
+        })),
+      }));
+
+      setPosts(transformedPosts);
+    } catch (error) {
+      console.error("Error loading posts:", error);
+      setError("Không thể tải bài viết. Vui lòng thử lại!");
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Cập nhật user từ props hoặc localStorage
@@ -23,55 +82,21 @@ function Home({ user: propUser, onLogout }) {
       }
     }
 
-    // Load posts
-    const storedPosts = localStorage.getItem("posts");
-    if (storedPosts) {
-      setPosts(JSON.parse(storedPosts));
-    } else {
-      const defaultPosts = [
-        {
-          id: 1,
-          caption: "Cảnh đẹp thiên nhiên tuyệt vời! 🌅",
-          image:
-            "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&h=400&fit=crop",
-          author: {
-            id: 1,
-            name: "Nguyễn Văn A",
-            avatar:
-              "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-          },
-          comments: [
-            { id: 1, content: "Đẹp quá!", author: "Mai Anh" },
-            { id: 2, content: "Chụp ở đâu vậy bạn?", author: "Tuấn Anh" },
-          ],
-        },
-        {
-          id: 2,
-          caption: "Buổi sáng tuyệt vời với tách cà phê ☕",
-          image:
-            "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=500&h=400&fit=crop",
-          author: {
-            id: 2,
-            name: "Trần Thị B",
-            avatar:
-              "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
-          },
-          comments: [
-            { id: 3, content: "Nhìn ngon quá!", author: "Hương Giang" },
-          ],
-        },
-      ];
-      setPosts(defaultPosts);
-      localStorage.setItem("posts", JSON.stringify(defaultPosts));
-    }
+    // Load posts từ API
+    getPhotos();
   }, [propUser]);
 
   const handleLogin = (userData) => {
     setUser(userData);
+    // Reload posts after login
+    getPhotos();
   };
 
   const handleLogout = () => {
     setUser(null);
+    setPosts([]);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     if (onLogout) {
       onLogout();
     }
@@ -87,10 +112,24 @@ function Home({ user: propUser, onLogout }) {
     setSelectedPost(null);
   };
 
+  // Trong function Home, cập nhật handleCreatePost
   const handleCreatePost = (newPost) => {
+    // Thêm post mới vào đầu danh sách
     const updatedPosts = [newPost, ...posts];
     setPosts(updatedPosts);
-    localStorage.setItem("posts", JSON.stringify(updatedPosts));
+
+    // Hoặc reload lại toàn bộ posts từ API để đảm bảo đồng bộ
+    // getPhotos();
+  };
+
+  const handleCommentAdded = (postId, newComment) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? { ...post, comments: [...post.comments, newComment] }
+          : post
+      )
+    );
   };
 
   return (
@@ -102,14 +141,39 @@ function Home({ user: propUser, onLogout }) {
 
         <div className="home__main">
           <CreatePost user={user} onCreatePost={handleCreatePost} />
-          <PostList posts={posts} onOpenPostDetail={handleOpenPostDetail} />
+
+          {loading && (
+            <div className="home__loading">
+              <p>Đang tải bài viết...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="home__error">
+              <p>{error}</p>
+              <button onClick={getPhotos} className="home__retry-btn">
+                Thử lại
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <PostList posts={posts} onOpenPostDetail={handleOpenPostDetail} />
+          )}
         </div>
 
         <div className="home__right"></div>
       </div>
 
-      {showPostDetail && selectedPost && (
+      {/* {showPostDetail && selectedPost && (
         <PostDetail post={selectedPost} onClose={handleClosePostDetail} />
+      )} */}
+      {showPostDetail && selectedPost && (
+        <PostDetail
+          post={selectedPost}
+          onClose={handleClosePostDetail}
+          onCommentAdded={handleCommentAdded}
+        />
       )}
     </div>
   );

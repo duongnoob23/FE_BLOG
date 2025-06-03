@@ -34,7 +34,9 @@ function Header({ user, onLogin, onLogout }) {
             <Link to={`/profile/${user.id}`}>
               <img src={user.avatar} alt="Avatar" className="header__avatar" />
             </Link>
-            <span className="header__greeting">Hi {user.firstname}</span>
+            <span className="header__greeting">
+              Hi {user.firstname} {user.lastname}
+            </span>
             <button className="header__logout-btn" onClick={onLogout}>
               Logout
             </button>

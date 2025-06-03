@@ -38,6 +38,17 @@
   margin-bottom: 24px;
 }
 
+.register__error {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  text-align: center;
+  font-size: 14px;
+  border: 1px solid #ffcdd2;
+}
+
 .register__name-row {
   display: flex;
   gap: 12px;
@@ -73,6 +84,12 @@
   background-color: #ffffff;
 }
 
+.register__input:disabled {
+  background-color: #e4e6ea;
+  color: #8a8d91;
+  cursor: not-allowed;
+}
+
 .register__submit {
   width: 100%;
   background-color: #42b883;
@@ -86,8 +103,14 @@
   transition: background-color 0.2s;
 }
 
-.register__submit:hover {
+.register__submit:hover:not(:disabled) {
   background-color: #369870;
+}
+
+.register__submit:disabled {
+  background-color: #e4e6ea;
+  color: #8a8d91;
+  cursor: not-allowed;
 }
 
 .register__footer {

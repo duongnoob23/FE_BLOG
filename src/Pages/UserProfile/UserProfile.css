@@ -62,6 +62,35 @@
   border-bottom: 1px solid #e4e6ea;
 }
 
+.user-profile__loading,
+.user-profile__error {
+  text-align: center;
+  padding: 40px;
+}
+
+.user-profile__loading p,
+.user-profile__error p {
+  color: #65676b;
+  font-size: 16px;
+  margin: 0 0 16px 0;
+}
+
+.user-profile__retry-btn {
+  background-color: #1877f2;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.user-profile__retry-btn:hover {
+  background-color: #166fe5;
+}
+
 .user-profile__posts-list {
   display: flex;
   flex-direction: column;

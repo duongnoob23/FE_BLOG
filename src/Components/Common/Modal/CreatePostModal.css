@@ -42,6 +42,17 @@
   padding: 0 16px 16px;
 }
 
+.create-post-modal__error {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  text-align: center;
+  font-size: 14px;
+  border: 1px solid #ffcdd2;
+}
+
 .create-post-modal__textarea {
   width: 100%;
   border: none;
@@ -51,6 +62,12 @@
   resize: none;
   margin-bottom: 16px;
   font-family: inherit;
+  box-sizing: border-box;
+}
+
+.create-post-modal__textarea:disabled {
+  background-color: #f0f2f5;
+  color: #8a8d91;
 }
 
 .create-post-modal__textarea::placeholder {
@@ -77,6 +94,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1;
+}
+
+.create-post-modal__remove-image:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .create-post-modal__preview-img {

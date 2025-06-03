@@ -6,6 +6,8 @@ function CreatePostModal({ user, onClose, onSubmit }) {
   const [caption, setCaption] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -19,24 +21,77 @@ function CreatePostModal({ user, onClose, onSubmit }) {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (caption.trim() || selectedImage) {
+  // API upload ảnh
+  const uploadPhoto = async () => {
+    const token = localStorage.getItem("token");
+    if (!token || !user.id) {
+      setError("Vui lòng đăng nhập để đăng bài!");
+      return;
+    }
+
+    if (!selectedImage) {
+      setError("Vui lòng chọn ảnh để đăng!");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      // Tạo FormData để gửi file và user_id
+      const formData = new FormData();
+      formData.append("photo", selectedImage); // File ảnh
+      formData.append("user_id", user.id); // User ID
+
+      const response = await fetch("http://localhost:8081/api/photo/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Không set Content-Type khi dùng FormData, browser sẽ tự set
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Không thể đăng bài viết");
+      }
+
+      const data = await response.json();
+      console.log("Upload response:", data);
+
+      // Tạo post object để hiển thị ngay lập tức
       const newPost = {
-        id: Date.now(),
-        caption: caption.trim(),
-        image:
-          imagePreview ||
-          "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&h=400&fit=crop",
+        id: data.photo._id,
+        caption:
+          caption.trim() || `Bài viết của ${user.firstname || user.userName}`,
+        image: `http://localhost:8081/uploads/${data.photo.file_name}`,
         author: {
           id: user.id,
-          name: `${user.firstname} ${user.lastname}`,
+          name: `${user.firstname || user.userName} ${
+            user.lastname || ""
+          }`.trim(),
           avatar: user.avatar,
         },
         comments: [],
       };
-      onSubmit(newPost);
+      console.log("🚀 ~ uploadPhoto ~ newPost:", newPost.caption);
+
+      // Gọi callback để thêm post vào danh sách
+      //   onSubmit(newPost);
+
+      // Đóng modal
+      onClose();
+    } catch (error) {
+      console.error("Error uploading photo:", error);
+      setError("Không thể đăng bài viết. Vui lòng thử lại!");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    uploadPhoto();
   };
 
   const removeImage = () => {
@@ -63,12 +118,15 @@ function CreatePostModal({ user, onClose, onSubmit }) {
         </div>
 
         <form onSubmit={handleSubmit} className="create-post-modal__form">
+          {error && <div className="create-post-modal__error">{error}</div>}
+
           <textarea
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
             placeholder={`${user.firstname} ơi, bạn đang nghĩ gì thế?`}
             className="create-post-modal__textarea"
             rows="4"
+            disabled={loading}
           />
 
           {imagePreview && (
@@ -77,6 +135,7 @@ function CreatePostModal({ user, onClose, onSubmit }) {
                 type="button"
                 className="create-post-modal__remove-image"
                 onClick={removeImage}
+                disabled={loading}
               >
                 ✕
               </button>
@@ -95,6 +154,8 @@ function CreatePostModal({ user, onClose, onSubmit }) {
                 accept="image/*"
                 onChange={handleImageChange}
                 className="create-post-modal__upload-input"
+                disabled={loading}
+                required
               />
               <div className="create-post-modal__upload-area">
                 <span className="create-post-modal__upload-icon">📷</span>
@@ -111,9 +172,9 @@ function CreatePostModal({ user, onClose, onSubmit }) {
           <button
             type="submit"
             className="create-post-modal__submit"
-            disabled={!caption.trim() && !selectedImage}
+            disabled={loading || !selectedImage}
           >
-            Đăng
+            {loading ? "Đang đăng..." : "Đăng"}
           </button>
         </form>
       </div>

@@ -70,6 +70,12 @@
   background-color: #ffffff;
 }
 
+.login__input:disabled {
+  background-color: #e4e6ea;
+  color: #8a8d91;
+  cursor: not-allowed;
+}
+
 .login__submit {
   width: 100%;
   background-color: #1877f2;
@@ -83,8 +89,14 @@
   transition: background-color 0.2s;
 }
 
-.login__submit:hover {
+.login__submit:hover:not(:disabled) {
   background-color: #166fe5;
+}
+
+.login__submit:disabled {
+  background-color: #e4e6ea;
+  color: #8a8d91;
+  cursor: not-allowed;
 }
 
 .login__footer {
