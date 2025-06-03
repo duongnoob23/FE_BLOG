@@ -1,0 +1,7 @@
+Home → PostList → PostCard → (click comment) → PostDetail → CommentList + CommentForm
+
+Home → UserList → UserItem
+
+Home → Header
+
+Tôi có mô tả đúng cấu trúc gọi components không?
