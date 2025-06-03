@@ -16,9 +16,9 @@ function PostCard({ post, onOpenPostDetail }) {
         />
         <span className="post-card__author-name">{post.author.name}</span>
       </div>
-
       <div className="post-card__content">
         <p className="post-card__caption">{post.caption}</p>
+
         <img src={post.image} alt="Post" className="post-card__image" />
       </div>
 

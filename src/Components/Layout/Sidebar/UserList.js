@@ -14,7 +14,7 @@ function UserList() {
       id: 2,
       name: "Meta AI",
       avatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face",
     },
     {
       id: 3,

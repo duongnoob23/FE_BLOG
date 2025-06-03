@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, Link } from "react-router-dom";
 import "../styles.css";
 import Home from "../Pages/Home/Home";
 import About from "../Pages/About/About";
 import Login from "../Pages/Login/Login";
+import Register from "../Pages/Register/Register";
+import UserProfile from "../Pages/UserProfile/UserProfile";
 import NoMatch from "../Pages/NotFound/NoMatch";
 import Posts from "../Pages/Post/Posts";
 import Post from "../Pages/Post/Post";
@@ -16,53 +18,36 @@ function AppLayout() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
+  // Kiểm tra user từ localStorage khi component mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  function handleLogin(userData) {
+    setUser(userData);
+  }
+
   function logOut() {
     setUser(null);
+    localStorage.removeItem("user");
     navigate("/");
   }
 
   return (
     <>
-      <nav className="navbar">
-        <Link to="/" className="nav-link">
-          Home
-        </Link>
-        <Link to="/posts" className="nav-link">
-          Posts
-        </Link>
-        <Link to="/about" className="nav-link">
-          About
-        </Link>
-        <span> | </span>
-        {user && (
-          <Link to="/stats" className="nav-link">
-            Stats
-          </Link>
-        )}
-        {user && (
-          <Link to="/newpost" className="nav-link">
-            New Post
-          </Link>
-        )}
-        {!user && (
-          <Link to="/login" className="nav-link">
-            Login
-          </Link>
-        )}
-        {user && (
-          <span onClick={logOut} className="nav-link logout">
-            Logout
-          </span>
-        )}
-      </nav>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home user={user} onLogout={logOut} />} />
         <Route path="/posts" element={<Posts />}>
           <Route index element={<PostLists />} />
           <Route path=":slug" element={<Post />} />
         </Route>{" "}
         <Route path="/about" element={<About />} />
-        <Route path="/login" element={<Login onLogin={setUser} />} />
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/profile/:userId" element={<UserProfile />} />
         <Route
           path="/stats"
           element={

@@ -1,16 +1,12 @@
 import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./Header.css";
 
 function Header({ user, onLogin, onLogout }) {
+  const navigate = useNavigate();
+
   const handleLogin = () => {
-    const fakeUser = {
-      id: 1,
-      firstname: "John",
-      lastname: "Doe",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    };
-    onLogin(fakeUser);
+    navigate("/login");
   };
 
   return (
@@ -18,24 +14,26 @@ function Header({ user, onLogin, onLogout }) {
       <div className="header__left"></div>
 
       <div className="header__center">
-        <div className="header__nav-item">
+        <Link to="/" className="header__nav-item">
           <span className="header__icon">🏠</span>
           <span className="header__text">Home</span>
-        </div>
-        <div className="header__nav-item">
+        </Link>
+        <Link to="/about" className="header__nav-item">
           <span className="header__icon">ℹ️</span>
           <span className="header__text">About</span>
-        </div>
-        <div className="header__nav-item">
+        </Link>
+        <Link to="/posts" className="header__nav-item">
           <span className="header__icon">📝</span>
           <span className="header__text">Post</span>
-        </div>
+        </Link>
       </div>
 
       <div className="header__right">
         {user ? (
           <div className="header__user">
-            <img src={user.avatar} alt="Avatar" className="header__avatar" />
+            <Link to={`/profile/${user.id}`}>
+              <img src={user.avatar} alt="Avatar" className="header__avatar" />
+            </Link>
             <span className="header__greeting">Hi {user.firstname}</span>
             <button className="header__logout-btn" onClick={onLogout}>
               Logout

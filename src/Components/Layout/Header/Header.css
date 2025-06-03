@@ -31,6 +31,8 @@
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
+  text-decoration: none;
+  color: inherit;
 }
 
 .header__nav-item:hover {
