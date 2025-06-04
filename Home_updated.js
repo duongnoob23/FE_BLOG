@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Home.css";
+// Bỏ import Header vì đã được hiển thị ở AppLayout
+// import Header from "../../Components/Layout/Header/Header";
 import UserList from "../../Components/Layout/Sidebar/UserList";
 import PostList from "../../Components/Post/PostList/PostList";
 import PostDetail from "../../Components/Post/PostDetail/PostDetail";
@@ -111,10 +113,14 @@ function Home({ user: propUser, onLogout }) {
     setSelectedPost(null);
   };
 
+  // Trong function Home, cập nhật handleCreatePost
   const handleCreatePost = (newPost) => {
     // Thêm post mới vào đầu danh sách
     const updatedPosts = [newPost, ...posts];
     setPosts(updatedPosts);
+
+    // Hoặc reload lại toàn bộ posts từ API để đảm bảo đồng bộ
+    // getPhotos();
   };
 
   const handleCommentAdded = (postId, newComment) => {
@@ -129,6 +135,9 @@ function Home({ user: propUser, onLogout }) {
 
   return (
     <div className="home">
+      {/* Bỏ Header vì đã được hiển thị ở AppLayout */}
+      {/* <Header user={user} onLogin={handleLogin} onLogout={handleLogout} /> */}
+
       <div className="home__content">
         <div className="home__sidebar">{user && <UserList />}</div>
 
@@ -158,6 +167,9 @@ function Home({ user: propUser, onLogout }) {
         <div className="home__right"></div>
       </div>
 
+      {/* {showPostDetail && selectedPost && (
+        <PostDetail post={selectedPost} onClose={handleClosePostDetail} />
+      )} */}
       {showPostDetail && selectedPost && (
         <PostDetail
           post={selectedPost}

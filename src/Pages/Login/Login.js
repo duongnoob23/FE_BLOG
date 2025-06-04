@@ -114,7 +114,7 @@ function Login({ onLogin }) {
           </p>
         </div>
 
-        <div className="login__demo">
+        {/* <div className="login__demo">
           <p className="login__demo-text">
             <strong>Tài khoản demo:</strong>
             <br />
@@ -122,7 +122,7 @@ function Login({ onLogin }) {
             <br />
             Mật khẩu: 1
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );

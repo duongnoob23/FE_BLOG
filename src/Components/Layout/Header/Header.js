@@ -22,10 +22,6 @@ function Header({ user, onLogin, onLogout }) {
           <span className="header__icon">ℹ️</span>
           <span className="header__text">About</span>
         </Link>
-        <Link to="/posts" className="header__nav-item">
-          <span className="header__icon">📝</span>
-          <span className="header__text">Post</span>
-        </Link>
       </div>
 
       <div className="header__right">

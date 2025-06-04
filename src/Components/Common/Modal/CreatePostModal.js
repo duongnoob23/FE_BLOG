@@ -6,6 +6,7 @@ function CreatePostModal({ user, onClose, onSubmit }) {
   const [caption, setCaption] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  console.log("🚀 ~ CreatePostModal ~ imagePreview:", imagePreview);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -77,7 +78,7 @@ function CreatePostModal({ user, onClose, onSubmit }) {
       console.log("🚀 ~ uploadPhoto ~ newPost:", newPost.caption);
 
       // Gọi callback để thêm post vào danh sách
-      //   onSubmit(newPost);
+      onSubmit(newPost);
 
       // Đóng modal
       onClose();
@@ -120,14 +121,14 @@ function CreatePostModal({ user, onClose, onSubmit }) {
         <form onSubmit={handleSubmit} className="create-post-modal__form">
           {error && <div className="create-post-modal__error">{error}</div>}
 
-          <textarea
+          {/* <textarea
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
             placeholder={`${user.firstname} ơi, bạn đang nghĩ gì thế?`}
             className="create-post-modal__textarea"
             rows="4"
             disabled={loading}
-          />
+          /> */}
 
           {imagePreview && (
             <div className="create-post-modal__image-preview">
@@ -147,27 +148,29 @@ function CreatePostModal({ user, onClose, onSubmit }) {
             </div>
           )}
 
-          <div className="create-post-modal__image-upload">
-            <label className="create-post-modal__upload-label">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="create-post-modal__upload-input"
-                disabled={loading}
-                required
-              />
-              <div className="create-post-modal__upload-area">
-                <span className="create-post-modal__upload-icon">📷</span>
-                <span className="create-post-modal__upload-text">
-                  Thêm ảnh/video
-                </span>
-                <span className="create-post-modal__upload-subtext">
-                  hoặc kéo và thả
-                </span>
-              </div>
-            </label>
-          </div>
+          {imagePreview === null && (
+            <div className="create-post-modal__image-upload">
+              <label className="create-post-modal__upload-label">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="create-post-modal__upload-input"
+                  disabled={loading}
+                  required
+                />
+                <div className="create-post-modal__upload-area">
+                  <span className="create-post-modal__upload-icon">📷</span>
+                  <span className="create-post-modal__upload-text">
+                    Thêm ảnh/video
+                  </span>
+                  <span className="create-post-modal__upload-subtext">
+                    hoặc kéo và thả
+                  </span>
+                </div>
+              </label>
+            </div>
+          )}
 
           <button
             type="submit"

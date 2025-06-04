@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import "./UserProfile.css";
+// Bỏ import Header vì đã được hiển thị ở AppLayout
+// import Header from "../../Components/Layout/Header/Header";
 import PostCard from "../../Components/Post/PostCard/PostCard";
 import PostDetail from "../../Components/Post/PostDetail/PostDetail";
 
@@ -136,6 +138,12 @@ function UserProfile() {
     setSelectedPost(null);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setCurrentUser(null);
+  };
+
   const handleCommentAdded = (postId, newComment) => {
     setUserPosts((prevPosts) =>
       prevPosts.map((post) =>
@@ -149,6 +157,8 @@ function UserProfile() {
   if (!user && !loading) {
     return (
       <div className="user-profile">
+        {/* Bỏ Header vì đã được hiển thị ở AppLayout */}
+        {/* <Header user={currentUser} onLogout={handleLogout} /> */}
         <div className="user-profile__content">
           <div className="user-profile__error">
             <p>Không tìm thấy người dùng</p>
@@ -160,6 +170,9 @@ function UserProfile() {
 
   return (
     <div className="user-profile">
+      {/* Bỏ Header vì đã được hiển thị ở AppLayout */}
+      {/* <Header user={currentUser} onLogout={handleLogout} /> */}
+
       <div className="user-profile__content">
         {user && (
           <div className="user-profile__header">

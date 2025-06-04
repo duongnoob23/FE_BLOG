@@ -8,23 +8,23 @@ import Login from "../Pages/Login/Login";
 import Register from "../Pages/Register/Register";
 import UserProfile from "../Pages/UserProfile/UserProfile";
 import NoMatch from "../Pages/NotFound/NoMatch";
+import Posts from "../Pages/Post/Posts";
+import Post from "../Pages/Post/Post";
+import PostLists from "../Pages/Post/PostLists";
+import Stats from "../Stats";
+import NewPost from "../Pages/Post/NewPost";
 import ProtectedRoute from "../Routes/ProtectedRoute";
 
 function AppLayout() {
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   // Kiểm tra user từ localStorage khi component mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
-
-    if (storedUser && token) {
+    if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-
-    setIsLoading(false);
   }, []);
 
   function handleLogin(userData) {
@@ -38,21 +38,16 @@ function AppLayout() {
     navigate("/login");
   }
 
-  // Hiển thị loading trong khi check user
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <>
       {/* Header luôn hiển thị ở tất cả các trang */}
       <Header user={user} onLogin={handleLogin} onLogout={logOut} />
-
+      
       <Routes>
         {/* Các trang không cần đăng nhập */}
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/register" element={<Register />} />
-
+        
         {/* Tất cả các trang khác đều được bọc trong ProtectedRoute */}
         <Route
           path="/"
@@ -62,7 +57,19 @@ function AppLayout() {
             </ProtectedRoute>
           }
         />
-
+        
+        <Route
+          path="/posts"
+          element={
+            <ProtectedRoute user={user}>
+              <Posts />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<PostLists />} />
+          <Route path=":slug" element={<Post />} />
+        </Route>
+        
         <Route
           path="/about"
           element={
@@ -71,7 +78,7 @@ function AppLayout() {
             </ProtectedRoute>
           }
         />
-
+        
         <Route
           path="/profile/:userId"
           element={
@@ -80,7 +87,25 @@ function AppLayout() {
             </ProtectedRoute>
           }
         />
-
+        
+        <Route
+          path="/stats"
+          element={
+            <ProtectedRoute user={user}>
+              <Stats user={user} />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/newpost"
+          element={
+            <ProtectedRoute user={user}>
+              <NewPost />
+            </ProtectedRoute>
+          }
+        />
+        
         <Route
           path="*"
           element={
